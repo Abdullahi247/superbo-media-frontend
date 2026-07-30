@@ -1,0 +1,89 @@
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Outfit:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-display: 'Barlow Condensed', sans-serif;
+  --font-body: 'Outfit', sans-serif;
+  --bg: #0c0a08;
+  --ember: #f59a2a;
+}
+
+html {
+  color-scheme: dark;
+}
+
+body {
+  background: var(--bg);
+  color: #f4efe8;
+  font-family: var(--font-body);
+  min-height: 100vh;
+}
+
+::selection {
+  background: rgba(245, 154, 42, 0.35);
+  color: #fff;
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fade-up 0.6s ease-out both;
+}
+
+.animate-fade-in-delay {
+  animation: fade-up 0.7s ease-out 0.12s both;
+}
+
+.animate-fade-in-late {
+  animation: fade-up 0.75s ease-out 0.22s both;
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+@layer components {
+  .surface {
+    @apply rounded-xl border border-ink-line/80 bg-ink-soft/70 backdrop-blur-sm;
+  }
+
+  .input-field {
+    @apply w-full rounded-lg border border-ink-line bg-ink/60 px-3.5 py-2.5 text-sm text-white
+      placeholder:text-mist-soft outline-none transition
+      focus:border-ember/60 focus:ring-1 focus:ring-ember/30;
+  }
+
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg bg-ember px-5 py-2.5
+      text-sm font-semibold text-ink transition hover:bg-ember-bright
+      disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg border border-ink-line
+      bg-ink-muted/40 px-5 py-2.5 text-sm font-medium text-white transition
+      hover:border-ember/40 hover:bg-ink-muted disabled:opacity-50;
+  }
+
+  .label-caps {
+    @apply text-[11px] font-semibold uppercase tracking-[0.18em] text-ember;
+  }
+
+  .heading-display {
+    @apply font-display text-4xl font-bold uppercase tracking-wide text-white sm:text-5xl;
+  }
+}
