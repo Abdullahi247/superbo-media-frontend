@@ -28,6 +28,7 @@ interface SignupPayload {
   role: UserRole;
   venueName?: string;
   venueLocation?: string;
+  venueCapacity?: number;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -39,7 +40,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const refresh = useCallback(async () => {
     const token =
       typeof window !== 'undefined'
-        ? localStorage.getItem('marquee_token')
+        ? localStorage.getItem('Superbo_token')
         : null;
     if (!token) {
       setUser(null);

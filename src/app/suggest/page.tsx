@@ -1,14 +1,14 @@
 'use client';
 
-import { FormEvent, useEffect, useState } from 'react';
-import Link from 'next/link';
+import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { api } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
 import type { Venue } from '../../lib/types';
+import { RequireRole } from '../../components/RequireRole';
 
-export default function SuggestPage() {
-  const { user, loading } = useAuth();
+function SuggestForm() {
+  const { user } = useAuth();
   const router = useRouter();
   const [venues, setVenues] = useState<Venue[]>([]);
   const [title, setTitle] = useState('');
@@ -22,19 +22,13 @@ export default function SuggestPage() {
     api<Venue[]>('/venues').then(setVenues).catch(() => undefined);
   }, []);
 
-  useEffect(() => {
-    if (!loading && user?.role === 'VENUE_MANAGER') {
-      router.replace('/queue');
-    }
-  }, [user, loading, router]);
+  const selectedVenue = useMemo(
+    () => venues.find((v) => v.id === venueId) ?? null,
+    [venues, venueId],
+  );
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
-    if (!user) {
-      router.push('/login');
-      return;
-    }
-
     setBusy(true);
     setError('');
     try {
@@ -64,17 +58,10 @@ export default function SuggestPage() {
         target venue manager&apos;s approval queue immediately.
       </p>
 
-      {!loading && !user && (
-        <div className="mt-6 rounded-xl border border-ember/30 bg-ember/10 px-4 py-3 text-sm text-ember-bright">
-          You need to{' '}
-          <Link href="/login" className="underline">
-            sign in as a customer
-          </Link>{' '}
-          before submitting.
-        </div>
-      )}
-
-      <form onSubmit={onSubmit} className="surface mt-8 space-y-5 p-6">
+      <form
+        onSubmit={onSubmit}
+        className="surface mt-8 space-y-5 p-6 transition-shadow duration-300 hover:shadow-[0_0_40px_rgba(245,154,42,0.08)]"
+      >
         <div>
           <label className="mb-1.5 block text-xs font-medium text-mist">
             Title
@@ -129,9 +116,20 @@ export default function SuggestPage() {
               <option key={v.id} value={v.id}>
                 {v.name}
                 {v.location ? ` — ${v.location}` : ''}
+                {v.capacity != null ? ` (cap. ${v.capacity})` : ''}
               </option>
             ))}
           </select>
+          {selectedVenue && (
+            <p className="mt-2 rounded-lg border border-ember/25 bg-ember/10 px-3 py-2 text-sm text-ember-bright animate-fade-in">
+              Capacity at <span className="text-white">{selectedVenue.name}</span>
+              :{' '}
+              <strong className="font-display text-lg tracking-wide">
+                {selectedVenue.capacity}
+              </strong>{' '}
+              people
+            </p>
+          )}
         </div>
 
         {error && (
@@ -149,5 +147,13 @@ export default function SuggestPage() {
         </button>
       </form>
     </div>
+  );
+}
+
+export default function SuggestPage() {
+  return (
+    <RequireRole role="CUSTOMER">
+      <SuggestForm />
+    </RequireRole>
   );
 }

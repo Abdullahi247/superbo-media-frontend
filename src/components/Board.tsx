@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { api } from '../lib/api';
 import type { EventItem, EventStatus, Stats, Venue } from '../lib/types';
 import { EventCard } from './EventCard';
+import { ArchitectureModal } from './ArchitectureModal';
+import { useAuth } from '../lib/auth';
 
 const FILTERS: Array<{ key: EventStatus | 'ALL'; label: string }> = [
   { key: 'ALL', label: 'All' },
@@ -14,6 +16,7 @@ const FILTERS: Array<{ key: EventStatus | 'ALL'; label: string }> = [
 ];
 
 export function Board() {
+  const { user } = useAuth();
   const [events, setEvents] = useState<EventItem[]>([]);
   const [venues, setVenues] = useState<Venue[]>([]);
   const [stats, setStats] = useState<Stats | null>(null);
@@ -21,6 +24,7 @@ export function Board() {
   const [venueId, setVenueId] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [showArchitecture, setShowArchitecture] = useState(false);
 
   useEffect(() => {
     api<Venue[]>('/venues').then(setVenues).catch(() => undefined);
@@ -55,7 +59,7 @@ export function Board() {
   return (
     <div>
       <section className="mx-auto max-w-6xl px-5 pb-10 pt-14 sm:pt-20">
-        <p className="label-caps animate-fade-in">Crowd-programmed nights</p>
+        <p className="label-caps animate-fade-in">Community Event Platform</p>
         <h1 className="mt-3 max-w-3xl animate-fade-in-delay font-display text-5xl font-bold uppercase leading-[0.95] tracking-wide text-white sm:text-6xl lg:text-7xl">
           The lineup is decided by{' '}
           <span className="text-ember">the room</span>, not the office.
@@ -66,34 +70,48 @@ export function Board() {
           the crowd actually asked for.
         </p>
         <div className="mt-8 flex flex-wrap items-center gap-4 animate-fade-in-late">
-          <Link href="/suggest" className="btn-primary">
-            Suggest an event
-            <span aria-hidden>→</span>
-          </Link>
-          <Link
-            href="/login"
-            className="text-sm font-medium text-ember transition hover:text-ember-bright"
+          {user?.role === 'VENUE_MANAGER' ? (
+            <Link href="/queue" className="btn-primary">
+              Open approval queue
+              <span aria-hidden className="btn-arrow inline-block">
+                →
+              </span>
+            </Link>
+          ) : (
+            <Link href="/suggest" className="btn-primary">
+              Suggest an event
+              <span aria-hidden className="btn-arrow inline-block">
+                →
+              </span>
+            </Link>
+          )}
+          <button
+            type="button"
+            onClick={() => setShowArchitecture(true)}
+            className="btn-ghost text-xs uppercase tracking-wider"
           >
-            Sign in to vote
-          </Link>
+            View architecture
+          </button>
+          {!user && (
+            <Link href="/login" className="link-ember">
+              Sign in to vote
+            </Link>
+          )}
         </div>
 
         {stats && (
-          <div className="mt-12 grid grid-cols-2 gap-px overflow-hidden rounded-xl border border-ink-line bg-ink-line sm:grid-cols-4">
+          <div className="mt-12 grid grid-cols-2 gap-px overflow-hidden rounded-xl border border-ink-line bg-ink-line sm:grid-cols-4 animate-fade-in-late">
             {[
               ['Suggestions', stats.suggestions],
               ['In queue', stats.inQueue],
               ['Approved', stats.approved],
               ['Upvotes', stats.upvotes],
             ].map(([label, value]) => (
-              <div
-                key={String(label)}
-                className="bg-ink-soft/90 px-5 py-4 text-center sm:text-left"
-              >
+              <div key={String(label)} className="stat-cell">
                 <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-mist-soft">
                   {label}
                 </p>
-                <p className="mt-1 font-display text-3xl font-bold text-white">
+                <p className="mt-1 font-display text-3xl font-bold text-white transition-transform duration-200 group-hover:scale-105">
                   {value}
                 </p>
               </div>
@@ -114,10 +132,10 @@ export function Board() {
                   key={f.key}
                   type="button"
                   onClick={() => setFilter(f.key)}
-                  className={`rounded-md px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider transition ${
+                  className={`filter-chip ${
                     filter === f.key
-                      ? 'bg-ember text-ink'
-                      : 'text-mist hover:text-white'
+                      ? 'filter-chip-active'
+                      : 'text-mist'
                   }`}
                 >
                   {f.label}
@@ -140,33 +158,39 @@ export function Board() {
         </div>
 
         {loading && (
-          <div className="surface px-6 py-16 text-center text-mist">
+          <div className="surface loading-pulse px-6 py-16 text-center text-mist">
             Loading the board…
           </div>
         )}
         {error && (
-          <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-6 py-4 text-sm text-red-200">
+          <div className="animate-fade-in rounded-xl border border-red-500/30 bg-red-500/10 px-6 py-4 text-sm text-red-200">
             {error}
           </div>
         )}
         {!loading && !error && events.length === 0 && (
-          <div className="surface px-6 py-16 text-center">
+          <div className="surface animate-fade-in px-6 py-16 text-center">
             <h3 className="font-display text-2xl font-bold uppercase tracking-wide text-white">
               Nothing here yet
             </h3>
             <p className="mt-2 text-sm text-mist">
               Be the first to pitch a night at one of our venues.
             </p>
-            <Link href="/suggest" className="btn-primary mt-6">
-              Suggest an event
-            </Link>
+            {user?.role !== 'VENUE_MANAGER' && (
+              <Link href="/suggest" className="btn-primary mt-6">
+                Suggest an event
+                <span aria-hidden className="btn-arrow inline-block">
+                  →
+                </span>
+              </Link>
+            )}
           </div>
         )}
         <div className="grid gap-4">
-          {events.map((event) => (
+          {events.map((event, index) => (
             <EventCard
               key={event.id}
               event={event}
+              index={index}
               onChange={(updated) =>
                 setEvents((prev) =>
                   prev.map((e) => (e.id === updated.id ? updated : e)),
@@ -176,6 +200,11 @@ export function Board() {
           ))}
         </div>
       </section>
+
+      <ArchitectureModal
+        open={showArchitecture}
+        onClose={() => setShowArchitecture(false)}
+      />
     </div>
   );
 }

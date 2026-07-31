@@ -13,13 +13,13 @@ export class ApiRequestError extends Error {
 
 function getToken(): string | null {
   if (typeof window === 'undefined') return null;
-  return localStorage.getItem('marquee_token');
+  return localStorage.getItem('Superbo_token');
 }
 
 export function setToken(token: string | null) {
   if (typeof window === 'undefined') return;
-  if (token) localStorage.setItem('marquee_token', token);
-  else localStorage.removeItem('marquee_token');
+  if (token) localStorage.setItem('Superbo_token', token);
+  else localStorage.removeItem('Superbo_token');
 }
 
 export async function api<T>(

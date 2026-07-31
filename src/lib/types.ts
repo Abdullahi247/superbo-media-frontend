@@ -13,6 +13,7 @@ export interface Venue {
   id: string;
   name: string;
   location: string | null;
+  capacity?: number;
 }
 
 export interface EventItem {
@@ -33,6 +34,12 @@ export interface Stats {
   inQueue: number;
   approved: number;
   upvotes: number;
+}
+
+export interface QueueResponse {
+  venues: Venue[];
+  items: EventItem[];
+  counts: { pending: number; rejected: number };
 }
 
 export interface AuthResponse {

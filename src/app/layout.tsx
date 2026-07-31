@@ -5,7 +5,8 @@ import { AmbientBg } from '../components/AmbientBg';
 import { Nav } from '../components/Nav';
 
 export const metadata: Metadata = {
-  title: 'Marquee — Crowd-programmed nights',
+  title: 'Superbo Media — Community Event Platform',
+  // title: 'Superbo — Community Event Platform',
   description:
     'Suggest events, upvote what the room wants, and let venue managers approve the queue.',
 };

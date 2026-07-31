@@ -9,6 +9,8 @@
   --font-body: 'Outfit', sans-serif;
   --bg: #0c0a08;
   --ember: #f59a2a;
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 html {
@@ -38,16 +40,78 @@ body {
   }
 }
 
+@keyframes vote-pop {
+  0% {
+    transform: scale(1);
+  }
+  40% {
+    transform: scale(1.18);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes arrow-nudge {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(3px);
+  }
+}
+
+@keyframes soft-pulse {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
 .animate-fade-in {
-  animation: fade-up 0.6s ease-out both;
+  animation: fade-up 0.6s var(--ease-out) both;
 }
 
 .animate-fade-in-delay {
-  animation: fade-up 0.7s ease-out 0.12s both;
+  animation: fade-up 0.7s var(--ease-out) 0.12s both;
 }
 
 .animate-fade-in-late {
-  animation: fade-up 0.75s ease-out 0.22s both;
+  animation: fade-up 0.75s var(--ease-out) 0.22s both;
+}
+
+.animate-stagger {
+  animation: fade-up 0.5s var(--ease-out) both;
+}
+
+.vote-pop {
+  animation: vote-pop 0.35s var(--ease-spring);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-in,
+  .animate-fade-in-delay,
+  .animate-fade-in-late,
+  .animate-stagger,
+  .vote-pop {
+    animation: none;
+  }
+
+  .btn-primary,
+  .btn-ghost,
+  .surface,
+  .input-field,
+  .nav-link,
+  .filter-chip,
+  .vote-btn,
+  .stat-cell,
+  .link-ember {
+    transition: none !important;
+  }
 }
 
 @layer utilities {
@@ -59,24 +123,187 @@ body {
 @layer components {
   .surface {
     @apply rounded-xl border border-ink-line/80 bg-ink-soft/70 backdrop-blur-sm;
+    transition:
+      border-color 0.25s var(--ease-out),
+      transform 0.25s var(--ease-out),
+      box-shadow 0.25s var(--ease-out),
+      background-color 0.25s var(--ease-out);
+  }
+
+  .surface-interactive:hover {
+    @apply border-ember/30 bg-ink-soft;
+    transform: translateY(-2px);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(245, 154, 42, 0.06);
+  }
+
+  .surface-interactive:active {
+    transform: translateY(0);
   }
 
   .input-field {
     @apply w-full rounded-lg border border-ink-line bg-ink/60 px-3.5 py-2.5 text-sm text-white
-      placeholder:text-mist-soft outline-none transition
-      focus:border-ember/60 focus:ring-1 focus:ring-ember/30;
+      placeholder:text-mist-soft outline-none;
+    transition:
+      border-color 0.2s var(--ease-out),
+      box-shadow 0.2s var(--ease-out),
+      background-color 0.2s var(--ease-out);
+  }
+
+  .input-field:hover {
+    @apply border-ink-line/90 bg-ink/80;
+  }
+
+  .input-field:focus {
+    @apply border-ember/60 bg-ink;
+    box-shadow: 0 0 0 3px rgba(245, 154, 42, 0.15);
   }
 
   .btn-primary {
     @apply inline-flex items-center justify-center gap-2 rounded-lg bg-ember px-5 py-2.5
-      text-sm font-semibold text-ink transition hover:bg-ember-bright
+      text-sm font-semibold text-ink
       disabled:cursor-not-allowed disabled:opacity-50;
+    transition:
+      transform 0.18s var(--ease-out),
+      background-color 0.18s var(--ease-out),
+      box-shadow 0.18s var(--ease-out);
+  }
+
+  .btn-primary:hover:not(:disabled) {
+    @apply bg-ember-bright;
+    transform: translateY(-1px);
+    box-shadow: 0 8px 24px rgba(245, 154, 42, 0.28);
+  }
+
+  .btn-primary:active:not(:disabled) {
+    transform: translateY(1px) scale(0.98);
+    box-shadow: 0 2px 8px rgba(245, 154, 42, 0.2);
+  }
+
+  .btn-primary:hover:not(:disabled) .btn-arrow {
+    animation: arrow-nudge 0.7s var(--ease-out) infinite;
   }
 
   .btn-ghost {
     @apply inline-flex items-center justify-center gap-2 rounded-lg border border-ink-line
-      bg-ink-muted/40 px-5 py-2.5 text-sm font-medium text-white transition
-      hover:border-ember/40 hover:bg-ink-muted disabled:opacity-50;
+      bg-ink-muted/40 px-5 py-2.5 text-sm font-medium text-white
+      disabled:opacity-50;
+    transition:
+      transform 0.18s var(--ease-out),
+      border-color 0.18s var(--ease-out),
+      background-color 0.18s var(--ease-out);
+  }
+
+  .btn-ghost:hover:not(:disabled) {
+    @apply border-ember/40 bg-ink-muted;
+    transform: translateY(-1px);
+  }
+
+  .btn-ghost:active:not(:disabled) {
+    transform: translateY(1px) scale(0.98);
+  }
+
+  .nav-link {
+    @apply relative text-xs font-semibold uppercase tracking-[0.16em];
+    transition: color 0.2s var(--ease-out);
+  }
+
+  .nav-link::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: -4px;
+    width: 100%;
+    height: 1.5px;
+    background: var(--ember);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.25s var(--ease-out);
+  }
+
+  .nav-link:hover,
+  .nav-link-active {
+    @apply text-white;
+  }
+
+  .nav-link:hover::after,
+  .nav-link-active::after {
+    transform: scaleX(1);
+  }
+
+  .filter-chip {
+    @apply rounded-md px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider;
+    transition:
+      transform 0.18s var(--ease-out),
+      background-color 0.18s var(--ease-out),
+      color 0.18s var(--ease-out);
+  }
+
+  .filter-chip:hover:not(.filter-chip-active) {
+    @apply text-white;
+    transform: translateY(-1px);
+  }
+
+  .filter-chip:active {
+    transform: scale(0.96);
+  }
+
+  .filter-chip-active {
+    @apply bg-ember text-ink;
+  }
+
+  .vote-btn {
+    @apply flex min-w-[4.5rem] flex-col items-center rounded-lg border px-3 py-2;
+    transition:
+      transform 0.2s var(--ease-out),
+      border-color 0.2s var(--ease-out),
+      background-color 0.2s var(--ease-out),
+      color 0.2s var(--ease-out),
+      box-shadow 0.2s var(--ease-out);
+  }
+
+  .vote-btn:hover:not(:disabled) {
+    transform: translateY(-2px) scale(1.03);
+  }
+
+  .vote-btn:active:not(:disabled) {
+    transform: translateY(0) scale(0.95);
+  }
+
+  .vote-btn-on {
+    @apply border-ember bg-ember/15 text-ember-bright;
+    box-shadow: 0 0 20px rgba(245, 154, 42, 0.12);
+  }
+
+  .vote-btn-off {
+    @apply border-ink-line bg-ink/40 text-mist;
+  }
+
+  .vote-btn-off:hover:not(:disabled) {
+    @apply border-ember/40 text-white;
+  }
+
+  .stat-cell {
+    @apply bg-ink-soft/90 px-5 py-4 text-center sm:text-left;
+    transition:
+      background-color 0.25s var(--ease-out),
+      transform 0.25s var(--ease-out);
+  }
+
+  .stat-cell:hover {
+    @apply bg-ink-muted/80;
+  }
+
+  .link-ember {
+    @apply text-sm font-medium text-ember;
+    transition: color 0.2s var(--ease-out), transform 0.2s var(--ease-out);
+  }
+
+  .link-ember:hover {
+    @apply text-ember-bright;
+  }
+
+  .loading-pulse {
+    animation: soft-pulse 1.4s ease-in-out infinite;
   }
 
   .label-caps {

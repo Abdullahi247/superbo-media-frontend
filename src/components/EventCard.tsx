@@ -15,12 +15,14 @@ const statusStyles: Record<string, string> = {
 interface Props {
   event: EventItem;
   onChange?: (event: EventItem) => void;
+  index?: number;
 }
 
-export function EventCard({ event, onChange }: Props) {
+export function EventCard({ event, onChange, index = 0 }: Props) {
   const { user } = useAuth();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  const [popping, setPopping] = useState(false);
 
   async function toggleVote() {
     if (!user) {
@@ -31,9 +33,14 @@ export function EventCard({ event, onChange }: Props) {
       setError('Only customers can upvote');
       return;
     }
+    if (event.status === 'REJECTED') {
+      setError('You can not upvote an already rejected venue');
+      return;
+    }
 
     setBusy(true);
     setError('');
+    setPopping(true);
     try {
       const res = await api<{ upvoteCount: number; hasVoted: boolean }>(
         `/events/${event.id}/upvote`,
@@ -48,24 +55,36 @@ export function EventCard({ event, onChange }: Props) {
       setError(e instanceof Error ? e.message : 'Could not update vote');
     } finally {
       setBusy(false);
+      window.setTimeout(() => setPopping(false), 350);
     }
   }
 
+  const canVote = user?.role === 'CUSTOMER' && event.status !== 'REJECTED';
+  const voteDisabled = busy || !canVote;
+
   return (
-    <article className="surface group p-5 transition hover:border-ember/25">
+    <article
+      className="surface surface-interactive group p-5 animate-stagger"
+      style={{ animationDelay: `${Math.min(index, 8) * 0.05}s` }}
+    >
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0 flex-1">
           <div className="mb-2 flex flex-wrap items-center gap-2">
             <span
-              className={`rounded-full border px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${statusStyles[event.status]}`}
+              className={`rounded-full border px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider transition-transform duration-200 group-hover:scale-[1.03] ${statusStyles[event.status]}`}
             >
               {statusLabel(event.status)}
             </span>
             {event.venue && (
-              <span className="text-xs text-mist-soft">{event.venue.name}</span>
+              <span className="text-xs text-mist-soft transition-colors duration-200 group-hover:text-mist">
+                {event.venue.name}
+                {event.venue.capacity != null
+                  ? ` · cap. ${event.venue.capacity}`
+                  : ''}
+              </span>
             )}
           </div>
-          <h3 className="font-display text-2xl font-semibold uppercase tracking-wide text-white">
+          <h3 className="font-display text-2xl font-semibold uppercase tracking-wide text-white transition-colors duration-200 group-hover:text-ember-bright/95">
             {event.title}
           </h3>
           <p className="mt-2 text-sm leading-relaxed text-mist">
@@ -75,17 +94,33 @@ export function EventCard({ event, onChange }: Props) {
             <span>{formatDate(event.proposedAt)}</span>
             {event.author && <span>pitched by {event.author.name}</span>}
           </div>
-          {error && <p className="mt-2 text-xs text-red-300">{error}</p>}
+          {error && (
+            <p className="mt-2 animate-fade-in text-xs text-red-300">{error}</p>
+          )}
+          {user?.role === 'VENUE_MANAGER' && (
+            <p className="mt-2 text-xs text-mist-soft">
+              Managers can&apos;t upvote — use the approval queue instead.
+            </p>
+          )}
         </div>
 
         <button
           type="button"
-          disabled={busy}
+          disabled={voteDisabled}
           onClick={toggleVote}
-          className={`flex min-w-[4.5rem] flex-col items-center rounded-lg border px-3 py-2 transition ${
-            event.hasVoted
-              ? 'border-ember bg-ember/15 text-ember-bright'
-              : 'border-ink-line bg-ink/40 text-mist hover:border-ember/40 hover:text-white'
+          title={
+            !user
+              ? 'Sign in as a customer to upvote'
+              : user.role !== 'CUSTOMER'
+                ? 'Only customers can upvote'
+                : event.status === 'REJECTED'
+                  ? 'You can not upvote an already rejected venue'
+                  : undefined
+          }
+          className={`vote-btn ${event.hasVoted ? 'vote-btn-on' : 'vote-btn-off'} ${
+            popping ? 'vote-pop' : ''
+          } ${busy ? 'opacity-70' : ''} ${
+            !canVote ? 'cursor-not-allowed opacity-60' : ''
           }`}
           aria-label={event.hasVoted ? 'Remove upvote' : 'Upvote'}
         >
@@ -96,11 +131,17 @@ export function EventCard({ event, onChange }: Props) {
             fill={event.hasVoted ? 'currentColor' : 'none'}
             stroke="currentColor"
             strokeWidth="2"
-            className="mb-1"
+            className={`mb-1 transition-transform duration-200 ${
+              event.hasVoted ? '-translate-y-0.5' : ''
+            }`}
           >
-            <path d="M12 19V5M5 12l7-7 7 7" strokeLinecap="round" strokeLinejoin="round" />
+            <path
+              d="M12 19V5M5 12l7-7 7 7"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
           </svg>
-          <span className="font-display text-xl font-bold leading-none">
+          <span className="font-display text-xl font-bold leading-none tabular-nums">
             {event.upvoteCount}
           </span>
         </button>

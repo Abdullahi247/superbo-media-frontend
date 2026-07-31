@@ -5,9 +5,6 @@ import { usePathname, useRouter } from 'next/navigation';
 import { Logo } from './Logo';
 import { useAuth } from '../lib/auth';
 
-const linkBase =
-  'text-xs font-semibold uppercase tracking-[0.16em] transition';
-
 export function Nav() {
   const pathname = usePathname();
   const router = useRouter();
@@ -16,43 +13,29 @@ export function Nav() {
   const isActive = (href: string) =>
     pathname === href || (href !== '/' && pathname.startsWith(href));
 
+  const navClass = (href: string, exactHome = false) => {
+    const active = exactHome
+      ? pathname === '/'
+      : isActive(href);
+    return `nav-link ${active ? 'nav-link-active' : 'text-mist'}`;
+  };
+
   return (
     <header className="relative z-20 border-b border-ink-line/50">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-5">
         <div className="flex items-center gap-8">
           <Logo />
           <nav className="hidden items-center gap-6 sm:flex">
-            <Link
-              href="/"
-              className={`${linkBase} ${
-                isActive('/') && pathname === '/'
-                  ? 'text-white'
-                  : 'text-mist hover:text-white'
-              }`}
-            >
+            <Link href="/" className={navClass('/', true)}>
               Board
             </Link>
             {(!user || user.role === 'CUSTOMER') && (
-              <Link
-                href="/suggest"
-                className={`${linkBase} ${
-                  isActive('/suggest')
-                    ? 'text-white'
-                    : 'text-mist hover:text-white'
-                }`}
-              >
+              <Link href="/suggest" className={navClass('/suggest')}>
                 Suggest
               </Link>
             )}
             {user?.role === 'VENUE_MANAGER' && (
-              <Link
-                href="/queue"
-                className={`${linkBase} ${
-                  isActive('/queue')
-                    ? 'text-white'
-                    : 'text-mist hover:text-white'
-                }`}
-              >
+              <Link href="/queue" className={navClass('/queue')}>
                 Queue
               </Link>
             )}

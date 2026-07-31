@@ -29,13 +29,13 @@ export default function LoginPage() {
 
   return (
     <div className="mx-auto flex min-h-[calc(100vh-4rem)] max-w-md flex-col justify-center px-5 py-16">
-      <p className="label-caps">Marquee access</p>
+      <p className="label-caps">Superbo access</p>
       <h1 className="mt-2 heading-display">Welcome back</h1>
       <p className="mt-3 text-sm text-mist">
         Customers suggest and upvote. Venue managers approve the queue.
       </p>
 
-      <form onSubmit={onSubmit} className="surface mt-8 space-y-4 p-6">
+      <form onSubmit={onSubmit} className="surface mt-8 space-y-4 p-6 transition-shadow duration-300 hover:shadow-[0_0_40px_rgba(245,154,42,0.08)]">
         <div>
           <label className="mb-1.5 block text-xs font-medium text-mist">
             Email
@@ -78,14 +78,14 @@ export default function LoginPage() {
 
       <p className="mt-6 text-center text-sm text-mist-soft">
         No account yet?{' '}
-        <Link href="/signup" className="text-ember hover:text-ember-bright">
+        <Link href="/signup" className="link-ember">
           Create one
         </Link>
       </p>
 
       <p className="mt-8 rounded-lg border border-ink-line/60 bg-ink-soft/40 px-4 py-3 text-xs leading-relaxed text-mist-soft">
-        Demo: <span className="text-mist">customer@marquee.local</span> or{' '}
-        <span className="text-mist">manager@marquee.local</span> — password{' '}
+        Demo: <span className="text-mist">customer@Superbo.local</span> or{' '}
+        <span className="text-mist">manager@Superbo.local</span> — password{' '}
         <span className="text-mist">password123</span>
       </p>
     </div>

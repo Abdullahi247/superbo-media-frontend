@@ -1,3 +1,3 @@
 # Frontend
 
-Next.js app for Marquee. See the root [README](../README.md) for setup.
+Next.js app for Superbo. See the root [README](../README.md) for setup.
