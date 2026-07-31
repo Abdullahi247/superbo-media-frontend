@@ -84,8 +84,8 @@ export default function LoginPage() {
       </p>
 
       <p className="mt-8 rounded-lg border border-ink-line/60 bg-ink-soft/40 px-4 py-3 text-xs leading-relaxed text-mist-soft">
-        Demo: <span className="text-mist">customer@Superbo.local</span> or{' '}
-        <span className="text-mist">manager@Superbo.local</span> — password{' '}
+        Demo: <span className="text-mist">customer@superbo.local</span> or{' '}
+        <span className="text-mist">manager@superbo.local</span> — password{' '}
         <span className="text-mist">password123</span>
       </p>
     </div>

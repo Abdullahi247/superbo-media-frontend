@@ -37,6 +37,10 @@ export function EventCard({ event, onChange, index = 0 }: Props) {
       setError('You can not upvote an already rejected venue');
       return;
     }
+    if (event.status === 'APPROVED') {
+      setError('You can not upvote an already approved venue');
+      return;
+    }
 
     setBusy(true);
     setError('');
@@ -59,7 +63,9 @@ export function EventCard({ event, onChange, index = 0 }: Props) {
     }
   }
 
-  const canVote = user?.role === 'CUSTOMER' && event.status !== 'REJECTED';
+  const votingClosed =
+    event.status === 'REJECTED' || event.status === 'APPROVED';
+  const canVote = user?.role === 'CUSTOMER' && !votingClosed;
   const voteDisabled = busy || !canVote;
 
   return (
@@ -115,7 +121,9 @@ export function EventCard({ event, onChange, index = 0 }: Props) {
                 ? 'Only customers can upvote'
                 : event.status === 'REJECTED'
                   ? 'You can not upvote an already rejected venue'
-                  : undefined
+                  : event.status === 'APPROVED'
+                    ? 'You can not upvote an already approved venue'
+                    : undefined
           }
           className={`vote-btn ${event.hasVoted ? 'vote-btn-on' : 'vote-btn-off'} ${
             popping ? 'vote-pop' : ''

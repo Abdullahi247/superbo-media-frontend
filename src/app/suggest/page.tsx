@@ -7,6 +7,12 @@ import { useAuth } from '../../lib/auth';
 import type { Venue } from '../../lib/types';
 import { RequireRole } from '../../components/RequireRole';
 
+/** `datetime-local` min value in the user's local timezone. */
+function localDateTimeMin(from = new Date()) {
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${from.getFullYear()}-${pad(from.getMonth() + 1)}-${pad(from.getDate())}T${pad(from.getHours())}:${pad(from.getMinutes())}`;
+}
+
 function SuggestForm() {
   const { user } = useAuth();
   const router = useRouter();
@@ -17,9 +23,18 @@ function SuggestForm() {
   const [venueId, setVenueId] = useState('');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+  const [minDateTime, setMinDateTime] = useState(() => localDateTimeMin());
 
   useEffect(() => {
     api<Venue[]>('/venues').then(setVenues).catch(() => undefined);
+  }, []);
+
+  // Keep min in sync so the picker can't drift into the past while the form is open.
+  useEffect(() => {
+    const id = window.setInterval(() => {
+      setMinDateTime(localDateTimeMin());
+    }, 30_000);
+    return () => window.clearInterval(id);
   }, []);
 
   const selectedVenue = useMemo(
@@ -27,8 +42,26 @@ function SuggestForm() {
     [venues, venueId],
   );
 
+  function onProposedAtChange(value: string) {
+    setProposedAt(value);
+    if (value && value < localDateTimeMin()) {
+      setError('Proposed date & time must be in the future');
+      return;
+    }
+    if (error === 'Proposed date & time must be in the future') {
+      setError('');
+    }
+  }
+
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
+    const min = localDateTimeMin();
+    setMinDateTime(min);
+    if (!proposedAt || proposedAt < min) {
+      setError('Proposed date & time must be in the future');
+      return;
+    }
+
     setBusy(true);
     setError('');
     try {
@@ -96,10 +129,14 @@ function SuggestForm() {
           <input
             type="datetime-local"
             required
+            min={minDateTime}
             value={proposedAt}
-            onChange={(e) => setProposedAt(e.target.value)}
+            onChange={(e) => onProposedAtChange(e.target.value)}
             className="input-field"
           />
+          <p className="mt-1.5 text-xs text-mist-soft">
+            Past dates and times can&apos;t be selected.
+          </p>
         </div>
         <div>
           <label className="mb-1.5 block text-xs font-medium text-mist">
